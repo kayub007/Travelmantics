@@ -15,29 +15,22 @@ import com.google.firebase.database.FirebaseDatabase;
 public class DealActivity extends AppCompatActivity {
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
-
     EditText txtTitle;
     EditText txtDescription;
     EditText txtPrice;
     TravelDeal deal;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insert);
-
-        FirebaseUtil.openFbReference("traveldeals");
-
         mFirebaseDatabase = FirebaseUtil.mFirebaseDatabase;
         mDatabaseReference = FirebaseUtil.mDatabaseReference;
-
-        txtTitle = findViewById(R.id.txtTitle);
-        txtDescription = findViewById(R.id.txtDescription);
-        txtPrice = findViewById(R.id.txtPrice);
-
+        txtTitle = (EditText) findViewById(R.id.txtTitle);
+        txtDescription = (EditText) findViewById(R.id.txtDescription);
+        txtPrice = (EditText) findViewById(R.id.txtPrice);
         Intent intent = getIntent();
         TravelDeal deal = (TravelDeal) intent.getSerializableExtra("Deal");
-        if (deal == null){
+        if (deal==null) {
             deal = new TravelDeal();
         }
         this.deal = deal;
@@ -45,13 +38,12 @@ public class DealActivity extends AppCompatActivity {
         txtDescription.setText(deal.getDescription());
         txtPrice.setText(deal.getPrice());
     }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.save_menu:
                 saveDeal();
-                Toast.makeText(this, "Deal Save", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Deal saved", Toast.LENGTH_LONG).show();
                 clean();
                 backToList();
                 return true;
@@ -62,46 +54,61 @@ public class DealActivity extends AppCompatActivity {
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+
         }
-    }
 
-    private void clean() {
-        txtTitle.setText("");
-        txtDescription.setText("");
-        txtPrice.setText("");
-        txtTitle.requestFocus();
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.save_menu, menu);
+        if (FirebaseUtil.isAdmin) {
+            menu.findItem(R.id.delete_menu).setVisible(true);
+            menu.findItem(R.id.save_menu).setVisible(true);
+            enableEditTexts(true);
+        }
+        else {
+            menu.findItem(R.id.delete_menu).setVisible(false);
+            menu.findItem(R.id.save_menu).setVisible(false);
+            enableEditTexts(false);
+        }
 
+
+        return true;
+    }
     private void saveDeal() {
         deal.setTitle(txtTitle.getText().toString());
         deal.setDescription(txtDescription.getText().toString());
         deal.setPrice(txtPrice.getText().toString());
-
-        if (deal.getId() == null){
-
+        if(deal.getId()==null) {
             mDatabaseReference.push().setValue(deal);
         }
         else {
             mDatabaseReference.child(deal.getId()).setValue(deal);
         }
     }
-
-    private void deleteDeal(){
-        if (deal == null){
+    private void deleteDeal() {
+        if (deal == null) {
             Toast.makeText(this, "Please save the deal before deleting", Toast.LENGTH_SHORT).show();
             return;
         }
         mDatabaseReference.child(deal.getId()).removeValue();
+
     }
-    private void backToList(){
-        Intent intent= new Intent(this, ListActivity.class);
+    private void backToList() {
+        Intent intent = new Intent(this, ListActivity.class);
         startActivity(intent);
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.save_menu, menu);
-        return true;
+    private void clean() {
+        txtTitle.setText("");
+        txtPrice.setText("");
+        txtDescription.setText("");
+        txtTitle.requestFocus();
     }
+    private void enableEditTexts(boolean isEnabled) {
+        txtTitle.setEnabled(isEnabled);
+        txtDescription.setEnabled(isEnabled);
+        txtPrice.setEnabled(isEnabled);
+    }
+
 }
